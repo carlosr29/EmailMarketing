@@ -1,15 +1,18 @@
 library(RMySQL)
-library(natexobasicr)
 library(data.table)
 library(lubridate)
 library(ggplot2)
 
 try(source(file = "Cleaning_Functions.R"))
-campaign <- as.data.table(read.csv("PerfumeCampaigns.csv")) #we use data.table for faster and more 
+campaign <- as.data.table(read.csv("TravelCampaigns.csv")) #we use data.table for faster and more 
+campaign[,X:=NULL]
+campaign[,email:=NULL]
+campaign[,MessageId:=NULL]
+campaign[,routerId:=NULL]
+campaign[,programId:=NULL]
 #efficient data manipulation
 print(nrow(campaign)) # number of rows of the data set 
 print(ncol(campaign)) # number of columns for the data set
-summary(campaign)
 
 campaign$Open <- as.factor(campaign$Open)
 levels(campaign$Open) <- c("NoOpen","Open")
@@ -18,7 +21,32 @@ levels(campaign$Open) <- c("NoOpen","Open")
 campaign$subject <- as.character(campaign$subject)
 campaign$subject <- clean_subject(subject = campaign$subject)
 
+summary(campaign)
+table(campaign$Open)
+print(paste0("Proportion of Opens ",table(campaign$Open)[2]/table(campaign$Open)[1]))
+
 #Advanced Data vizualisation
+campaign <- na.omit(campaign)
+
+#Plots related to subjects
+#Adding variables related to subject: if brand mentionned, if price quoted, if some words in all caps
+
+campaign[,target_types:=user_targeting_type(campaign$subject)]
+pl <- ggplot(campaign, aes(target_types, fill = Open)) + geom_bar(position = "fill")
+plot(pl)
+
+#Detecting quoted prices and promotions
+campaign <- cbind(campaign, detect_prices(campaign$subject))
+pl <- ggplot(campaign, aes(prices, fill = Open)) + geom_bar(position = "fill")
+plot(pl)
+
+pl <- ggplot(campaign, aes(promotion, fill = Open)) + geom_bar(position = "fill")
+plot(pl)
+
+#Detecting all caps
+campaign[,caps:=detect_caps(campaign$subject)]
+pl <- ggplot(campaign, aes(caps, fill = Open)) + geom_bar(position = "fill")
+plot(pl)
 
 #For the rest of the analysis we need to transform the timesend variable to have days of the week, months and hours
 time_treatment_df <- convert_timestamp(campaign$timesend)
@@ -43,7 +71,7 @@ pl <- ggplot(campaign[code_post_densite_mean <=15,], aes(Open, code_post_densite
 plot(pl)
 
 #Correlation densité de population et altitude moyenne: négative, densité plus faible quand l'altitude augmente
-cor.test(dataset$code_post_densite_mean, dataset$code_post_alt_mean)
+cor.test(campaign$code_post_densite_mean, campaign$code_post_alt_mean)
 
 #scatterplots 
 
@@ -60,6 +88,4 @@ pl <- ggplot(campaign, aes(code_post_alt_mean, code_post_densite_mean)) +
   geom_point(aes(colour=as.factor(Open)))
 plot(pl)
 
-#Add other plots related to subjects
-
-
+#See the impact of unemployment, poverty and salary
