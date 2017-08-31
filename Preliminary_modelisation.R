@@ -59,6 +59,9 @@ campaign$prices <- as.factor(campaign$prices)
 #To properly assess the performance of our model we need to split our data set into a training and a test set
 campaign[,subject:=NULL] #We don't need a string feature
 
+# We use a fixed random seed for the experiments to have reproductible results 
+set.seed(123)
+
 ind <- sample(1:nrow(campaign), size = floor(0.8*nrow(campaign))) #index to split the dataset
 train <- campaign[ind,]
 test <- campaign[-ind,]
@@ -89,3 +92,4 @@ caret::confusionMatrix(predictions, test$Open)
 
 plot(tree_model)
 text(tree_model, use.n = T)
+
