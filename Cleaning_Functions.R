@@ -7,12 +7,17 @@ library(stringr)
 clean_subject <- function(subject){# Function to clean the subjects: remove punctuation, 
   #remove unnecessary characters
   if (!is.character(subject)){
-    stop("Error: is the subject in a character formet ? ")
+    tryCatch(as.character(subject), error = function(x) stop("Error: is the subject in a character format?"))
   }
-  Encoding(subject) <- "UTF-8" #We make sure the subject has the right encoding
+  Encoding(subject) <- "utf-8" #We make sure the subject has the right encoding
   subject <- tolower(subject)
   subject <- str_replace_all(subject, "[[:punct:]]", " ")
   subject <- str_replace_all(subject, "[\\|]", "")  
+  subject <- str_replace_all(subject, "subscriber", "")
+  subject <- str_replace_all(subject, "attribute", "")  
+  subject <- str_replace_all(subject, "firstname", "")  
+  subject <- str_replace_all(subject, "lastname", "")  
+  subject <- str_replace_all(subject, "zipcode", "")
   subject <- str_replace_all(subject, "\\s+", " ")#two spaces or more will be replaced by one space
   subject <- trimws(subject, which = "both")#trim white space (left and right) 
   return(subject)
@@ -29,7 +34,7 @@ add_length <- function(subject){
   lengths <- nchar(subject)
   return(lengths)
 }
-user_targeting_type_dummy <- function(subject, custom_tag){
+user_targeting_type_dummy <- function(subject, custom_tag, only_targetings = F){
   if(missing(custom_tag)) {
     inscription_email <- ifelse(str_detect(subject, "subscriber_email"), 1, 0)
     inscription_firstname <- ifelse(str_detect(subject, "subscriber_firstname"), 1, 0)
@@ -45,7 +50,10 @@ user_targeting_type_dummy <- function(subject, custom_tag){
     inscription_custom <- ifelse(str_detect(subject, custom_tag), 1, 0)
     target_types <- cbind(inscription_email, inscription_firstname, inscription_lastname, inscription_zipcode,
                       inscription_custom)
-    }
+  }
+  if(only_targetings==T){
+    target_types <- target_types[,-which(colSums(target_types) == 0)]
+  } 
   return(target_types)
 }
 
@@ -65,16 +73,13 @@ user_targeting_type <- function(subject, custom_tag){
   }
   return(target_types)
 }
-convert_timestamp_dummy <- function(timestmp, origin){#Function for creating dummy variables (hour ,day of the week, month)
+convert_timestamp_dummy <- function(timestmp, get_months = F){#Function for creating dummy variables (hour ,day of the week, month)
   #from a timstamp varaible
   library(nnet)
   library(lubridate)
   library(data.table)
   library(chron)#to determine if a date is a week end or not
-  if(missing(origin)){
-    origin <- "1970-01-01 00:00:00"
-  }
-  date_vector <- ymd_hms(origin) + dseconds(as.numeric(timestmp))
+  date_vector <- ymd_hms(timestmp)
   month_vector <- lubridate::month(date_vector)
   
   weekday_vector <- lubridate::wday(date_vector)
@@ -91,8 +96,11 @@ convert_timestamp_dummy <- function(timestmp, origin){#Function for creating dum
   hour <- class.ind(hour_vector)
   colnames(hour) <- paste0("H_",colnames(hour))
   
+  if (get_months){
   dataset <- as.data.frame(cbind(weekdays, weekends, months, hour))
-  
+  } else {
+    dataset <- as.data.frame(cbind(weekdays, weekends, hour))
+  }
   #transforming format of dummy variables to factor
   for (name in colnames(dataset)){
     dataset[,name] <- as.factor(dataset[,name])
@@ -101,16 +109,13 @@ convert_timestamp_dummy <- function(timestmp, origin){#Function for creating dum
 }
 
 
-convert_timestamp <- function(timestmp, origin){#Function for creating variables (hour ,day of the week, month)
+convert_timestamp <- function(timestmp){#Function for creating variables (hour ,day of the week, month)
   #from a timstamp varaible
   library(nnet)
   library(lubridate)
   library(data.table)
   library(chron)#to determine if a date is a week end or not
-  if(missing(origin)){
-    origin <- "1970-01-01 00:00:00"
-  }
-  date_vector <- ymd_hms(origin) + dseconds(as.numeric(timestmp))
+  date_vector <- ymd_hms(timestmp)
   
   month_vector <- lubridate::month(date_vector)
   weekday_vector <- lubridate::wday(date_vector)
@@ -166,12 +171,16 @@ age_groups <- function(ages){
   return(tranches)
 }
 
-detect_caps <- function(subject){
-  return(str_detect(subject, "\\b[A-Z]+\\b"))  
+get_hostnames <- function(emails, threshold=100){
+  library(stringr)
+  sub_email <- str_sub(emails ,str_locate(emails, "@")[,1] + 1)
+  hostnames <- str_sub(sub_email, 0, str_locate(sub_email, "\\.")[,1] - 1)
+  hostnames <- common_hostnames(hostnames, threshold)
+  return(hostnames)
 }
 
-detect_prices <- function(subject){
-  prices <- str_detect(subject, "^[[:digit:]]")
-  promotion <- str_detect(subject, "[[%]]")
-  return(cbind(prices,promotion))
+common_hostnames <- function(hostnames, threshold = 100){
+  hostnames[which(!hostnames %in% c(names(which(table(hostnames) > threshold))))] <- c("Other")
+  return(hostnames)
 }
+
