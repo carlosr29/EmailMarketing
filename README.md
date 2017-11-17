@@ -3,5 +3,5 @@ Madriss Seksaoui - Email marketing professional thesis - Msc in Data Sciences an
 
 This git repository contains all the necessary script files and anonymized sample data sets to reproduce all the results from:
 
-\emph{E-mail marketing: a personal experience with Big Data}
+### E-mail marketing: a personal experience with Big Data
 
