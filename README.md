@@ -21,7 +21,7 @@ Note that each sample data set contains 10 000 instances, the open proportion an
 
 File description:
 
-* train_test_vizu.R : ** Provides the user with the plots from Chapter 3 to illustrate overfitting/underfitting**
-* Preliminary_Modeling.R : ** Trains benchmark models including CART, RF and Logistic Regression**
-* model_comparison.R : ** Trains and compares the models listed in Chapter 5, the ensemble model is also trained in this file**
+* train_test_vizu.R : ** Provides the user with the plots from Chapter 3 to illustrate overfitting/underfitting **
+* Preliminary_Modeling.R : ** Trains benchmark models including CART, RF and Logistic Regression **
+* model_comparison.R : ** Trains and compares the models listed in Chapter 5, the ensemble model is also trained in this file **
 
