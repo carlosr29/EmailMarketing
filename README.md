@@ -24,4 +24,8 @@ File description:
 * **train_test_vizu.R** : Provides the user with the plots from Chapter 3 to illustrate overfitting/underfitting
 * **Preliminary_Modeling.R** : Trains benchmark models including CART, RF and Logistic Regression
 * **model_comparison.R** : Trains and compares the models listed in Chapter 5, the ensemble model is also trained in this file
-
+* **Cleaning_Functions.R**:	Contains several functions to obtains explanatory variables from the sample data sets
+* **get_text_features.R**: The file contains a set of functions to extract features from subject lines
+* **Email_Campaigns_EDA.R**: This file contains the code for the plots appearing in Chapter 4
+* **Email_Campaigns_EDA_Adv.R**: This file is used to obtain more advanced plots
+* **Text_Analysis.R**: Is used to to train models using the BOW and 2-Gram features from the subject lines
